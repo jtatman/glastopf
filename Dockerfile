@@ -1,13 +1,7 @@
-FROM ubuntu:14.04.1
+FROM ubuntu:18.04
 MAINTAINER Lukas Rist <glaslos@gmail.com>
 
 ENV DEBIAN_FRONTEND noninteractive
-
-## setup APT
-RUN sed -i '1ideb mirror://mirrors.ubuntu.com/mirrors.txt trusty main restricted universe multiverse' /etc/apt/sources.list && \
-    sed -i '1ideb mirror://mirrors.ubuntu.com/mirrors.txt trusty-updates main restricted universe multiverse' /etc/apt/sources.list && \
-    sed -i '1ideb mirror://mirrors.ubuntu.com/mirrors.txt trusty-backports main restricted universe multiverse' /etc/apt/sources.list && \
-    sed -i '1ideb mirror://mirrors.ubuntu.com/mirrors.txt trusty-security main restricted universe multiverse' /etc/apt/sources.list
 
 ## Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -37,22 +31,29 @@ RUN apt-get update && apt-get install -y \
         python2.7 \
         python2.7-dev \
         software-properties-common \
+        locales \
+        php7.2 \
+        php7.2-dev \
 	&& \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN locale-gen en_US.UTF-8 && export LANG=en_US.UTF-8 && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php && apt-get update
+#RUN locale-gen en_US.UTF-8 && export LANG=en_US.UTF-8 && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php && apt-get update
+RUN locale-gen en_US.UTF-8 
 
-RUN apt-get install -y --force-yes  php7.0 php7.0-dev
+#RUN apt-get install -y --force-yes  php7.0 php7.0-dev
+# RUN apt-get install -y php7.2 php7.2-dev
+
 
 ## Install and configure the PHP sandbox
 RUN git clone https://github.com/mushorg/BFR.git /opt/BFR && \
     cd /opt/BFR && \
-    phpize7.0 && \
+    phpize && \
     ./configure --enable-bfr && \
     make && \
     make install && \
-    echo "zend_extension = "$(find /usr -name bfr.so) >> /etc/php/7.0/cli/php.ini && \
+    php -i | grep "Loaded Configuration File" && \
+    echo "zend_extension = "$(find /usr -name bfr.so) >> /etc/php/7.2/cli/php.ini && \
     rm -rf /opt/BFR /tmp/* /var/tmp/*
 
 
